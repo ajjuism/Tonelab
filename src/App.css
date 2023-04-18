@@ -1,38 +1,136 @@
+body {
+  background-color: #0f0f0f;
+  font-family: "Urbanist", sans-serif;
+  color: #ffffff;
+  font-size: small;
+}
+
 .App {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.controls {
+  display: flex;
+  flex-direction: column;
+  margin-right: 32px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+.controls div {
+  margin-bottom: 8px;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+canvas {
+  background-color: #131313;
+  border-radius: 10px;
+  /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); */
+}
+
+.card {
+  background-color: #282828;
+  padding: 10px;
+  border-radius: 8px;
+  /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); */
+  margin-bottom: 16px;
+}
+
+.card:last-child {
+  margin-bottom: 0;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  background: #3e3e3e;
+  outline: none;
+  padding: 0;
+  margin: 8px 0;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #01a39b;
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #1d8a84;
+  cursor: pointer;
+}
+
+.particles {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+
+.particle {
+  position: absolute;
+  width: 1px;
+  height: 10px;
+  background-color: rgba(255, 255, 255, 0.5);
+  animation: moveParticle 1s linear infinite;
+}
+
+@keyframes moveParticle {
+  0% {
+    transform: translate(calc(-50% + 100vw * var(--x)), calc(-50% + 100vh * var(--y))) rotate(0deg);
+  }
+  100% {
+    transform: translate(calc(-50% + 100vw * var(--x)), calc(-50% + 100vh * var(--y))) rotate(360deg);
   }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* Add these styles to App.css */
+
+.navbar {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  justify-content: space-between;
+  padding: 20px;
+  background-color: #222;
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background-color: #222;
+  color: white;
+  text-align: center;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.footer a {
+  color: white;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
 }
