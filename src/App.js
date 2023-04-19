@@ -41,6 +41,9 @@ function App() {
 
   const [gainValue, setGainValue] = useState(0.5);
 
+  const [showMobileWarning, setShowMobileWarning] = useState(false);
+  const [isEmptyCanvas, setIsEmptyCanvas] = useState(true);
+
   useEffect(() => {
     const particles = document.querySelectorAll(".particle");
 
@@ -105,6 +108,8 @@ function App() {
     const randomColor = `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 1)`;
   
     balls.current.push(new Ball(x, y, dx, dy, randomColor));
+    setIsEmptyCanvas(false);
+
   };
 
   function debounce(func, wait, immediate) {
@@ -124,7 +129,25 @@ function App() {
   }  
   
   useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth <= 768) {
+        setShowMobileWarning(true);
+      } else {
+        setShowMobileWarning(false);
+      }
+    };
+  
+    window.addEventListener("resize", onResize);
+    onResize();
+  
+    return () => {
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
+    
     const ctx = canvas.getContext('2d');
 
     const updateBall = (ball) => {
@@ -266,19 +289,36 @@ function App() {
           />
         </div>
       </div>
+      <div className="canvas-container">
       <div className="particles">
         {Array.from({ length: 500 }).map((_, i) => (
           <div key={i} className="particle"></div>
         ))}
-      </div>      
+      </div> 
+      <div className="canvas-wrapper">     
       <canvas
         ref={canvasRef}
         onClick={handleClick}
         width={WIDTH}
         height={HEIGHT}
         style={{ border: '1px solid #222', marginTop: '16px' }}
-      ></canvas>
+      ></canvas>             
+          {isEmptyCanvas && (
+      <div className="empty-canvas-text">
+        <p>Click inside the canvas to begin</p>
+      </div>
+    )} 
+      </div>
+      </div>
             <Footer />
+
+            {showMobileWarning && (
+      <div className="mobile-warning">
+        <p>
+        It appears that you're on a mobile device. To access the full range of ToneLab's features and controls, we recommend switching to desktop view.
+        </p>
+      </div>
+    )}
     </div>
   );
 }  
