@@ -3,10 +3,10 @@ import './styles.css';
 
 const Footer = () => {
   return (
-    <div className="footer">
-      © 2023 Tone Lab | Made with Love {' '}
+    <div className="footer no-select">
+     Made with Love and {' '}
       <a href="https://tonejs.github.io/" target="_blank" rel="noreferrer">
-        and Tone.js
+        Tone.js
       </a>{' '}
       Imagined by_{' '}
       <a href="https://twitter.com/ajjuism" target="_blank" rel="noreferrer">

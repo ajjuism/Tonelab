@@ -228,4 +228,19 @@ input[type="range"]::-moz-range-thumb {
   .controls-toggle {
     display: none;
   }
+  
+  .particle {
+      width: 1px;
+      height: 5px;
+    }
+  
+    @keyframes moveParticle {
+      0% {
+        transform: translate(calc(-50% + 100vw * var(--x)), calc(-50% + 100vh * var(--y))) rotate(0deg);
+      }
+      100% {
+        transform: translate(calc(-50% + 100vw * var(--x)), calc(-50% + 100vh * var(--y))) rotate(360deg);
+      }
+    }
+  
 }
