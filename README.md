@@ -25,7 +25,7 @@ To set up ToneLab locally, follow these steps:
 1. Clone the repository:
 
 ```js
-git clone https://github.com/your_username/ToneLab.git
+git clone https://github.com/ajjuism/ToneLab.git
 ```
 
 2. Change into the project directory:
