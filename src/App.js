@@ -1,14 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
-import './App.css';
-import * as Tone from 'tone';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import styled from 'styled-components';
+import React, { useEffect, useRef, useState } from "react";
+import "./App.css";
+import * as Tone from "tone";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import styled from "styled-components";
+import { Button } from "./components/ds";
 
 const WIDTH = 1000;
 const HEIGHT = 680;
 
-const A_MINOR_SCALE = ['A3', 'B3', 'C4', 'D4', 'E4', 'F4', 'G4', 'A4'];
+const A_MINOR_SCALE = ["A3", "B3", "C4", "D4", "E4", "F4", "G4", "A4"];
 
 function randomElement(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -39,7 +40,6 @@ const StyledSelect = styled.select`
     border-color: #0077ff;
   }
 `;
-
 
 function App() {
   const canvasRef = useRef(null);
@@ -91,16 +91,21 @@ function App() {
       oscillator: {
         type: waveform, // Use the waveform from the state
       },
-    });  
-  
+    });
+
     delay.current = new Tone.FeedbackDelay(0.5);
     reverb.current = new Tone.Reverb(1.5);
     gain.current = new Tone.Gain().toDestination();
-    lowpassFilter.current = new Tone.Filter(20000, 'lowpass');
-    highpassFilter.current = new Tone.Filter(0, 'highpass');
-    synth.current.chain(highpassFilter.current, lowpassFilter.current, delay.current, reverb.current, gain.current);    
+    lowpassFilter.current = new Tone.Filter(20000, "lowpass");
+    highpassFilter.current = new Tone.Filter(0, "highpass");
+    synth.current.chain(
+      highpassFilter.current,
+      lowpassFilter.current,
+      delay.current,
+      reverb.current,
+      gain.current
+    );
   }, [waveform]);
-  
 
   useEffect(() => {
     synth.current.set({
@@ -124,29 +129,30 @@ function App() {
   useEffect(() => {
     gain.current.gain.value = gainValue;
   }, [gainValue]);
-  
+
   useEffect(() => {
     lowpassFilter.current.frequency.value = lowpassFrequency;
   }, [lowpassFrequency]);
-  
+
   useEffect(() => {
     highpassFilter.current.frequency.value = highpassFrequency;
   }, [highpassFrequency]);
 
   const handleClick = (event) => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     const dx = (Math.random() - 0.5) * ballSpeed * 5;
     const dy = (Math.random() - 0.5) * ballSpeed * 5;
-  
-    const randomColor = `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 1)`;
-  
+
+    const randomColor = `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${
+      Math.random() * 255
+    }, 1)`;
+
     balls.current.push(new Ball(x, y, dx, dy, randomColor));
     setIsEmptyCanvas(false);
-
   };
 
   function debounce(func, wait, immediate) {
@@ -164,8 +170,7 @@ function App() {
       if (callNow) func.apply(context, args);
     };
   }
-  
-  
+
   useEffect(() => {
     const onResize = () => {
       if (window.innerWidth <= 768) {
@@ -174,10 +179,10 @@ function App() {
         setShowMobileWarning(false);
       }
     };
-  
+
     window.addEventListener("resize", onResize);
     onResize();
-  
+
     return () => {
       window.removeEventListener("resize", onResize);
     };
@@ -185,19 +190,19 @@ function App() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    
-    const ctx = canvas.getContext('2d');
+
+    const ctx = canvas.getContext("2d");
 
     const updateBall = (ball) => {
-      ball.x += ball.dx * ballSpeed / prevBallSpeed;
-      ball.y += ball.dy * ballSpeed / prevBallSpeed;
+      ball.x += (ball.dx * ballSpeed) / prevBallSpeed;
+      ball.y += (ball.dy * ballSpeed) / prevBallSpeed;
 
       if (ball.x < 10 || ball.x > WIDTH - 10) {
         ball.dx = -ball.dx;
         playRandomNote();
         animateBallTouch(ball);
       }
-    
+
       if (ball.y < 10 || ball.y > HEIGHT - 10) {
         ball.dy = -ball.dy;
         playRandomNote();
@@ -214,22 +219,22 @@ function App() {
     };
 
     const playRandomNote = debounce(() => {
-      synth.current.triggerAttackRelease(randomElement(A_MINOR_SCALE), '8n');
+      synth.current.triggerAttackRelease(randomElement(A_MINOR_SCALE), "8n");
     }, 50);
-    
+
     const animateBallTouch = (ball) => {
-      const pulseElement = document.createElement('div');
-      pulseElement.classList.add('pulse');
+      const pulseElement = document.createElement("div");
+      pulseElement.classList.add("pulse");
       pulseElement.style.left = `${ball.x - 10}px`;
       pulseElement.style.top = `${ball.y - 10}px`;
       pulseElement.style.backgroundColor = ball.color;
       document.body.appendChild(pulseElement);
-    
+
       setTimeout(() => {
         document.body.removeChild(pulseElement);
       }, 1000);
     };
-    
+
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -248,22 +253,31 @@ function App() {
     setPrevBallSpeed(ballSpeed);
   }, [ballSpeed]);
 
+  /**
+   * Performs the necessary actions to wipe out
+   * all the balls in the canvas.
+   */
+  const handleOnClear = () => {
+    balls.current = [];
+    setIsEmptyCanvas(true);
+  };
+
   return (
     <div className="App">
-            <Navbar />
+      <Navbar />
       <div className="controls">
-            <div className="card">
-        <label>Waveform</label>
-        <StyledSelect
-          value={waveform}
-          onChange={(e) => setWaveform(e.target.value)}
-        >
-          <option value="sine">Sine</option>
-          <option value="square">Square</option>
-          <option value="triangle">Triangle</option>
-          <option value="sawtooth">Sawtooth</option>
-        </StyledSelect>
-      </div>
+        <div className="card">
+          <label>Waveform</label>
+          <StyledSelect
+            value={waveform}
+            onChange={(e) => setWaveform(e.target.value)}
+          >
+            <option value="sine">Sine</option>
+            <option value="square">Square</option>
+            <option value="triangle">Triangle</option>
+            <option value="sawtooth">Sawtooth</option>
+          </StyledSelect>
+        </div>
         <div className="card">
           <label>Attack: {attack.toFixed(2)}</label>
           <input
@@ -341,7 +355,7 @@ function App() {
             onChange={(e) => setBallSpeed(parseFloat(e.target.value))}
           />
         </div>
-        <div  className="card">
+        <div className="card">
           <label>Gain: {(gainValue * 100).toFixed(0)}%</label>
           <input
             type="range"
@@ -353,60 +367,72 @@ function App() {
           />
         </div>
         <div className="card">
-        <label>Lowpass Frequency: {lowpassFrequency.toFixed(0)} Hz</label>
-        <input
-          type="range"
-          min="20"
-          max="20000"
-          step="1"
-          value={lowpassFrequency}
-          onChange={(e) => setLowpassFrequency(parseFloat(e.target.value))}
-        />
-      </div>
-      <div className="card">
-        <label>Highpass Frequency: {highpassFrequency.toFixed(0)} Hz</label>
-        <input
-          type="range"
-          min="0"
-          max="1000"
-          step="1"
-          value={highpassFrequency}
-          onChange={(e) => setHighpassFrequency(parseFloat(e.target.value))}
-        />
-      </div>
+          <label>Lowpass Frequency: {lowpassFrequency.toFixed(0)} Hz</label>
+          <input
+            type="range"
+            min="20"
+            max="20000"
+            step="1"
+            value={lowpassFrequency}
+            onChange={(e) => setLowpassFrequency(parseFloat(e.target.value))}
+          />
+        </div>
+        <div className="card">
+          <label>Highpass Frequency: {highpassFrequency.toFixed(0)} Hz</label>
+          <input
+            type="range"
+            min="0"
+            max="1000"
+            step="1"
+            value={highpassFrequency}
+            onChange={(e) => setHighpassFrequency(parseFloat(e.target.value))}
+          />
+        </div>
       </div>
       <div className="canvas-container">
-      <div className="particles">
-        {Array.from({ length: 500 }).map((_, i) => (
-          <div key={i} className="particle"></div>
-        ))}
-      </div> 
-      <div className="canvas-wrapper">     
-      <canvas
-        ref={canvasRef}
-        onClick={handleClick}
-        width={WIDTH}
-        height={HEIGHT}
-        style={{ border: '1px solid #222', marginTop: '16px' }}
-      ></canvas>             
+        <div className="particles">
+          {Array.from({ length: 500 }).map((_, i) => (
+            <div key={i} className="particle"></div>
+          ))}
+        </div>
+        <div className="canvas-wrapper">
+          {!isEmptyCanvas && (
+            <Button
+              variant="outline"
+              className="clear-btn"
+              onClick={handleOnClear}
+              title="Clear all the balls"
+            >
+              ❌ Clear
+            </Button>
+          )}
+          <canvas
+            ref={canvasRef}
+            onClick={handleClick}
+            width={WIDTH}
+            height={HEIGHT}
+            style={{ border: "1px solid #222", marginTop: "16px" }}
+          ></canvas>
           {isEmptyCanvas && (
-      <div className="empty-canvas-text">
-        <p>Click inside the canvas to begin</p>
+            <div className="empty-canvas-text">
+              <p>Click inside the canvas to begin</p>
+            </div>
+          )}
+        </div>
       </div>
-    )} 
-      </div>
-      </div>
-            <Footer />
+      <Footer />
 
-            {showMobileWarning && (
-      <div className="mobile-warning">
-        <p>
-        It appears that you're on a mobile device. To access the full range of ToneLab's features and controls, we recommend switching to desktop view.
-        </p>
-      </div>
-    )}
+      {showMobileWarning && (
+        <div className="mobile-warning">
+          <p>
+            It appears that you're on a mobile device. To access the full range
+            of ToneLab's features and controls, we recommend switching to
+            desktop view.
+          </p>
+        </div>
+      )}
     </div>
   );
-}  
+}
 
 export default App;

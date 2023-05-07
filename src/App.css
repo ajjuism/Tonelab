@@ -87,7 +87,6 @@ input[type="range"]::-moz-range-thumb {
   z-index: -1;
 }
 
-
 .particle {
   position: absolute;
   width: 3px;
@@ -104,10 +103,10 @@ input[type="range"]::-moz-range-thumb {
     transform: translate(calc(var(--x) * 100vw), calc(var(--y) * 100vh));
   }
   100% {
-    transform: translate(calc(var(--x) * 100vw), calc(var(--y) * 100vh)) translateY(50px) translateX(50px);
+    transform: translate(calc(var(--x) * 100vw), calc(var(--y) * 100vh))
+      translateY(50px) translateX(50px);
   }
 }
-
 
 /* Add these styles to App.css
 
@@ -195,6 +194,14 @@ input[type="range"]::-moz-range-thumb {
   color: #525252;
 }
 
+.clear-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 5px;
+  height: 30px;
+  font-size: 12px;
+  line-height: 0;
+}
 
 .pulse {
   position: absolute;
@@ -215,7 +222,6 @@ input[type="range"]::-moz-range-thumb {
     transform: scale(3);
   }
 }
-
 
 @media (max-width: 768px) {
   .content {
@@ -253,19 +259,26 @@ input[type="range"]::-moz-range-thumb {
   .controls-toggle {
     display: none;
   }
-  
+
   .particle {
-      width: 1px;
-      height: 5px;
+    width: 1px;
+    height: 5px;
+  }
+
+  @keyframes moveParticle {
+    0% {
+      transform: translate(
+          calc(-50% + 100vw * var(--x)),
+          calc(-50% + 100vh * var(--y))
+        )
+        rotate(0deg);
     }
-  
-    @keyframes moveParticle {
-      0% {
-        transform: translate(calc(-50% + 100vw * var(--x)), calc(-50% + 100vh * var(--y))) rotate(0deg);
-      }
-      100% {
-        transform: translate(calc(-50% + 100vw * var(--x)), calc(-50% + 100vh * var(--y))) rotate(360deg);
-      }
+    100% {
+      transform: translate(
+          calc(-50% + 100vw * var(--x)),
+          calc(-50% + 100vh * var(--y))
+        )
+        rotate(360deg);
     }
-  
+  }
 }
