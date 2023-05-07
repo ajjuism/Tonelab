@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import "./App.css";
 import * as Tone from "tone";
 import Navbar from "./components/Navbar";
@@ -41,6 +47,102 @@ const StyledSelect = styled.select`
   }
 `;
 
+const getControlInitialState = () => {
+  return {
+    attack: 0.01,
+    decay: 0.2,
+    sustain: 0.2,
+    release: 1,
+    delayMix: 0.5,
+    reverbMix: 0.5,
+    ballSpeed: 1,
+    prevBallSpeed: 1,
+    gain: 0.5,
+    lowpassFrequency: 20000,
+    highpassFrequency: 0,
+    waveform: "sine",
+  };
+};
+
+const controlReducer = (state, action) => {
+  switch (action.type) {
+    case "UPDATE_ATTACK": {
+      return {
+        ...state,
+        attack: action.value,
+      };
+    }
+    case "UPDATE_DECAY": {
+      return {
+        ...state,
+        decay: action.value,
+      };
+    }
+    case "UPDATE_SUSTAIN": {
+      return {
+        ...state,
+        sustain: action.value,
+      };
+    }
+    case "UPDATE_RELEASE": {
+      return {
+        ...state,
+        release: action.value,
+      };
+    }
+    case "UPDATE_DELAY_MIX": {
+      return {
+        ...state,
+        delayMix: action.value,
+      };
+    }
+    case "UPDATE_REVERB_MIX": {
+      return {
+        ...state,
+        reverbMix: action.value,
+      };
+    }
+    case "UPDATE_BALL_SPEED": {
+      return {
+        ...state,
+        ballSpeed: action.value,
+      };
+    }
+    case "UPDATE_PREV_BALL_SPEED": {
+      return {
+        ...state,
+        prevBallSpeed: action.value,
+      };
+    }
+    case "UPDATE_GAIN": {
+      return {
+        ...state,
+        gain: action.value,
+      };
+    }
+    case "UPDATE_LOWPASS_FREQUENCY": {
+      return {
+        ...state,
+        lowpassFrequency: action.value,
+      };
+    }
+    case "UPDATE_HIGHPASS_FREQUENCY": {
+      return {
+        ...state,
+        highpassFrequency: action.value,
+      };
+    }
+    case "UPDATE_WAVEFORM": {
+      return {
+        ...state,
+        waveform: action.value,
+      };
+    }
+    default:
+      return state;
+  }
+};
+
 function App() {
   const canvasRef = useRef(null);
   const balls = useRef([]);
@@ -51,25 +153,13 @@ function App() {
   const lowpassFilter = useRef(null);
   const highpassFilter = useRef(null);
 
-  const [attack, setAttack] = useState(0.01);
-  const [decay, setDecay] = useState(0.2);
-  const [sustain, setSustain] = useState(0.2);
-  const [release, setRelease] = useState(1);
-
-  const [delayMix, setDelayMix] = useState(0.5);
-  const [reverbMix, setReverbMix] = useState(0.5);
-  const [ballSpeed, setBallSpeed] = useState(1);
-  const [prevBallSpeed, setPrevBallSpeed] = useState(1);
-
-  const [gainValue, setGainValue] = useState(0.5);
+  const [controlState, controlDispatch] = useReducer(
+    controlReducer,
+    getControlInitialState()
+  );
 
   const [showMobileWarning, setShowMobileWarning] = useState(false);
   const [isEmptyCanvas, setIsEmptyCanvas] = useState(true);
-
-  const [lowpassFrequency, setLowpassFrequency] = useState(20000);
-  const [highpassFrequency, setHighpassFrequency] = useState(0);
-
-  const [waveform, setWaveform] = useState("sine");
 
   useEffect(() => {
     const particles = document.querySelectorAll(".particle");
@@ -86,10 +176,11 @@ function App() {
     });
   }, []);
 
+  //@TODO: Move useEffect to handler for waveform change
   useEffect(() => {
     synth.current = new Tone.Synth({
       oscillator: {
-        type: waveform, // Use the waveform from the state
+        type: controlState.waveform, // Use the waveform from the state
       },
     });
 
@@ -105,40 +196,26 @@ function App() {
       reverb.current,
       gain.current
     );
-  }, [waveform]);
+  }, [controlState.waveform]);
 
   useEffect(() => {
     synth.current.set({
       envelope: {
-        attack: attack,
-        decay: decay,
-        sustain: sustain,
-        release: release,
+        attack: controlState.attack,
+        decay: controlState.decay,
+        sustain: controlState.sustain,
+        release: controlState.release,
       },
     });
-  }, [attack, decay, sustain, release]);
+  }, [
+    controlState.attack,
+    controlState.decay,
+    controlState.sustain,
+    controlState.release,
+  ]);
 
-  useEffect(() => {
-    delay.current.wet.value = delayMix;
-  }, [delayMix]);
-
-  useEffect(() => {
-    reverb.current.wet.value = reverbMix;
-  }, [reverbMix]);
-
-  useEffect(() => {
-    gain.current.gain.value = gainValue;
-  }, [gainValue]);
-
-  useEffect(() => {
-    lowpassFilter.current.frequency.value = lowpassFrequency;
-  }, [lowpassFrequency]);
-
-  useEffect(() => {
-    highpassFilter.current.frequency.value = highpassFrequency;
-  }, [highpassFrequency]);
-
-  const handleClick = (event) => {
+  const handleCanvasClick = (event) => {
+    const { ballSpeed } = controlState;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     const rect = canvas.getBoundingClientRect();
@@ -172,6 +249,10 @@ function App() {
   }
 
   useEffect(() => {
+    /**
+     * Detect and show warning if the accessing device
+     * is a mobile.
+     */
     const onResize = () => {
       if (window.innerWidth <= 768) {
         setShowMobileWarning(true);
@@ -188,14 +269,14 @@ function App() {
     };
   }, []);
 
-  useEffect(() => {
+  const drawBallsOnCanvas = useCallback((currentBallSpeed, prevBallSpeed) => {
     const canvas = canvasRef.current;
 
     const ctx = canvas.getContext("2d");
 
     const updateBall = (ball) => {
-      ball.x += (ball.dx * ballSpeed) / prevBallSpeed;
-      ball.y += (ball.dy * ballSpeed) / prevBallSpeed;
+      ball.x += (ball.dx * currentBallSpeed) / prevBallSpeed;
+      ball.y += (ball.dy * currentBallSpeed) / prevBallSpeed;
 
       if (ball.x < 10 || ball.x > WIDTH - 10) {
         ball.dx = -ball.dx;
@@ -247,11 +328,94 @@ function App() {
     };
 
     render();
-  }, [ballSpeed, prevBallSpeed]); // Add prevBallSpeed here
+  }, []);
 
-  useEffect(() => {
-    setPrevBallSpeed(ballSpeed);
-  }, [ballSpeed]);
+  const handleWaveformChange = (e) => {
+    controlDispatch({
+      type: "UPDATE_WAVEFORM",
+      value: e.target.value,
+    });
+  };
+
+  const handleAttackChange = (e) => {
+    controlDispatch({
+      type: "UPDATE_ATTACK",
+      value: e.target.valueAsNumber,
+    });
+  };
+
+  const handleDecayChange = (e) => {
+    controlDispatch({
+      type: "UPDATE_DECAY",
+      value: e.target.valueAsNumber,
+    });
+  };
+
+  const handleSustainChange = (e) => {
+    controlDispatch({
+      type: "UPDATE_SUSTAIN",
+      value: e.target.valueAsNumber,
+    });
+  };
+
+  const handleReleaseChange = (e) => {
+    controlDispatch({
+      type: "UPDATE_RELEASE",
+      value: e.target.valueAsNumber,
+    });
+  };
+
+  const handleDelayMixChange = (e) => {
+    delay.current.wet.value = e.target.valueAsNumber;
+    controlDispatch({
+      type: "UPDATE_DELAY_MIX",
+      value: e.target.valueAsNumber,
+    });
+  };
+
+  const handleReverbMixChange = (e) => {
+    reverb.current.wet.value = e.target.valueAsNumber;
+    controlDispatch({
+      type: "UPDATE_REVERB_MIX",
+      value: e.target.valueAsNumber,
+    });
+  };
+
+  const handleBallSpeedChange = (e) => {
+    controlDispatch({
+      type: "UPDATE_PREV_BALL_SPEED",
+      value: controlState.ballSpeed,
+    });
+    controlDispatch({
+      type: "UPDATE_BALL_SPEED",
+      value: e.target.valueAsNumber,
+    });
+    drawBallsOnCanvas(e.target.valueAsNumber, controlState.ballSpeed);
+  };
+
+  const handleGainChange = (e) => {
+    gain.current.gain.value = e.target.valueAsNumber;
+    controlDispatch({
+      type: "UPDATE_GAIN",
+      value: e.target.valueAsNumber,
+    });
+  };
+
+  const handleHighpassFrequencyChange = (e) => {
+    highpassFilter.current.frequency.value = e.target.valueAsNumber;
+    controlDispatch({
+      type: "UPDATE_HIGHPASS_FREQUENCY",
+      value: e.target.valueAsNumber,
+    });
+  };
+
+  const handleLowpassFrequencyChange = (e) => {
+    lowpassFilter.current.frequency.value = e.target.valueAsNumber;
+    controlDispatch({
+      type: "UPDATE_LOWPASS_FREQUENCY",
+      value: e.target.valueAsNumber,
+    });
+  };
 
   /**
    * Performs the necessary actions to wipe out
@@ -269,8 +433,8 @@ function App() {
         <div className="card">
           <label>Waveform</label>
           <StyledSelect
-            value={waveform}
-            onChange={(e) => setWaveform(e.target.value)}
+            value={controlState.waveform}
+            onChange={handleWaveformChange}
           >
             <option value="sine">Sine</option>
             <option value="square">Square</option>
@@ -279,113 +443,119 @@ function App() {
           </StyledSelect>
         </div>
         <div className="card">
-          <label>Attack: {attack.toFixed(2)}</label>
+          <label>Attack: {controlState.attack.toFixed(2)}</label>
           <input
             type="range"
             min="0.01"
             max="1"
             step="0.01"
-            value={attack}
-            onChange={(e) => setAttack(parseFloat(e.target.value))}
+            value={controlState.attack}
+            onChange={handleAttackChange}
           />
         </div>
         <div className="card">
-          <label>Decay: {decay.toFixed(2)}</label>
+          <label>Decay: {controlState.decay.toFixed(2)}</label>
           <input
             type="range"
             min="0.01"
             max="1"
             step="0.01"
-            value={decay}
-            onChange={(e) => setDecay(parseFloat(e.target.value))}
+            value={controlState.decay}
+            onChange={handleDecayChange}
           />
         </div>
         <div className="card">
-          <label>Sustain: {sustain.toFixed(2)}</label>
+          <label>Sustain: {controlState.sustain.toFixed(2)}</label>
           <input
             type="range"
             min="0.01"
             max="1"
             step="0.01"
-            value={sustain}
-            onChange={(e) => setSustain(parseFloat(e.target.value))}
+            value={controlState.sustain}
+            onChange={handleSustainChange}
           />
         </div>
         <div className="card">
-          <label>Release: {release.toFixed(2)}</label>
+          <label>Release: {controlState.release.toFixed(2)}</label>
           <input
             type="range"
             min="0.01"
             max="3"
             step="0.01"
-            value={release}
-            onChange={(e) => setRelease(parseFloat(e.target.value))}
+            value={controlState.release}
+            onChange={handleReleaseChange}
           />
         </div>
         <div className="card">
-          <label>Delay Mix: {delayMix.toFixed(2)}</label>
+          <label>Delay Mix: {controlState.delayMix.toFixed(2)}</label>
           <input
             type="range"
             min="0"
             max="1"
             step="0.01"
-            value={delayMix}
-            onChange={(e) => setDelayMix(parseFloat(e.target.value))}
+            value={controlState.delayMix}
+            onChange={handleDelayMixChange}
           />
         </div>
         <div className="card">
-          <label>Reverb Mix: {reverbMix.toFixed(2)}</label>
+          <label>Reverb Mix: {controlState.reverbMix.toFixed(2)}</label>
           <input
             type="range"
             min="0"
             max="1"
             step="0.01"
-            value={reverbMix}
-            onChange={(e) => setReverbMix(parseFloat(e.target.value))}
+            value={controlState.reverbMix}
+            onChange={handleReverbMixChange}
           />
         </div>
         <div className="card">
-          <label>Ball Speed (Unstable): {ballSpeed.toFixed(2)}</label>
+          <label>
+            Ball Speed (Unstable): {controlState.ballSpeed.toFixed(2)}
+          </label>
           <input
             type="range"
             min="0"
             max="5"
             step="1"
-            value={ballSpeed}
-            onChange={(e) => setBallSpeed(parseFloat(e.target.value))}
+            value={controlState.ballSpeed}
+            onChange={handleBallSpeedChange}
           />
         </div>
         <div className="card">
-          <label>Gain: {(gainValue * 100).toFixed(0)}%</label>
+          <label>Gain: {(controlState.gain * 100).toFixed(0)}%</label>
           <input
             type="range"
             min="0"
             max="0.8"
             step="0.01"
-            value={gainValue}
-            onChange={(e) => setGainValue(parseFloat(e.target.value))}
+            value={controlState.gain}
+            onChange={handleGainChange}
           />
         </div>
         <div className="card">
-          <label>Lowpass Frequency: {lowpassFrequency.toFixed(0)} Hz</label>
+          <label>
+            Lowpass Frequency: {controlState.lowpassFrequency.toFixed(0)} Hz
+          </label>
           <input
             type="range"
             min="20"
             max="20000"
             step="1"
-            value={lowpassFrequency}
-            onChange={(e) => setLowpassFrequency(parseFloat(e.target.value))}
+            value={controlState.lowpassFrequency}
+            onChange={handleLowpassFrequencyChange}
           />
         </div>
         <div className="card">
-          <label>Highpass Frequency: {highpassFrequency.toFixed(0)} Hz</label>
+          <label>
+            Highpass Frequency: {controlState.highpassFrequency.toFixed(0)} Hz
+          </label>
           <input
             type="range"
             min="0"
             max="1000"
             step="1"
-            value={highpassFrequency}
-            onChange={(e) => setHighpassFrequency(parseFloat(e.target.value))}
+            value={controlState.highpassFrequency}
+            onChange={handleHighpassFrequencyChange}
           />
         </div>
       </div>
@@ -408,7 +578,7 @@ function App() {
           )}
           <canvas
             ref={canvasRef}
-            onClick={handleClick}
+            onClick={handleCanvasClick}
             width={WIDTH}
             height={HEIGHT}
             style={{ border: "1px solid #222", marginTop: "16px" }}
