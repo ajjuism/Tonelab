@@ -4,7 +4,7 @@ import './styles.css';
 const Navbar = () => {
   return (
     <div className="navbar">
-      <div className="logo">Tone Lab</div>
+      <div className="logo">ToneLab 2.0</div>
     </div>
   );
 };
