@@ -68,7 +68,7 @@ const InfoButton = () => {
           <div className="info-footer">
             Made with <span className="heart">❤️</span> and 
             <a 
-              href="https://tonejs.github.io/" 
+              href="https://tonejs.github.io" 
               target="_blank" 
               rel="noopener noreferrer"
               className="footer-link"
