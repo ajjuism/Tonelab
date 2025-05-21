@@ -52,7 +52,7 @@ const InfoButton = () => {
             
             <div className="info-links">
               <a 
-                href="https://google.com" 
+                href="https://tone-lab-v1.vercel.app/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="previous-version-link"
